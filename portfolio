@@ -1,0 +1,65 @@
+import requests
+import json
+
+class StockPortfolioTracker:
+    def __init__(self):
+        self.portfolio = {}
+        self.api_key = "your_api_key"  # Replace with your financial API key
+        self.base_url = "https://financialmodelingprep.com/api/v3/quote/"
+
+    def add_stock(self, symbol, shares):
+        """Add a stock to the portfolio."""
+        if symbol in self.portfolio:
+            self.portfolio[symbol]['shares'] += shares
+        else:
+            self.portfolio[symbol] = {'shares': shares, 'price': 0, 'value': 0}
+        print(f"Added {shares} shares of {symbol} to the portfolio.")
+
+    def remove_stock(self, symbol):
+        """Remove a stock from the portfolio."""
+        if symbol in self.portfolio:
+            del self.portfolio[symbol]
+            print(f"Removed {symbol} from the portfolio.")
+        else:
+            print(f"Stock {symbol} not found in the portfolio.")
+
+    def fetch_stock_price(self, symbol):
+        """Fetch real-time stock price using the financial API."""
+        try:
+            response = requests.get(f"{self.base_url}{symbol}?apikey={self.api_key}")
+            data = response.json()
+            if data:
+                return data[0]['price']
+            else:
+                print(f"No data found for {symbol}.")
+                return None
+        except Exception as e:
+            print(f"Error fetching stock price: {e}")
+            return None
+
+    def update_portfolio(self):
+        """Update the portfolio with real-time stock prices."""
+        for symbol in self.portfolio:
+            price = self.fetch_stock_price(symbol)
+            if price is not None:
+                self.portfolio[symbol]['price'] = price
+                self.portfolio[symbol]['value'] = price * self.portfolio[symbol]['shares']
+
+    def display_portfolio(self):
+        """Display the current portfolio."""
+        print("\nPortfolio:")
+        total_value = 0
+        for symbol, data in self.portfolio.items():
+            print(f"{symbol}: {data['shares']} shares at ${data['price']:.2f} each, Total Value: ${data['value']:.2f}")
+            total_value += data['value']
+        print(f"\nTotal Portfolio Value: ${total_value:.2f}")
+
+# Example Usage
+if __name__ == "__main__":
+    tracker = StockPortfolioTracker()
+    tracker.add_stock("AAPL", 10)
+    tracker.add_stock("GOOGL", 5)
+    tracker.update_portfolio()
+    tracker.display_portfolio()
+    tracker.remove_stock("AAPL")
+    tracker.display_portfolio()
